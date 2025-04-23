@@ -134,6 +134,8 @@ def get_pose3D(video_path, output_dir):
     args.previous_dir = 'checkpoint/poseformer_9'
     args.n_joints, args.out_joints = 17, 17
 
+    all_3d_points = []
+    
     ## Reload 
     model = Model_poseformer(args).cuda()
 
@@ -209,6 +211,8 @@ def get_pose3D(video_path, output_dir):
         post_out = camera_to_world(post_out, R=rot, t=0)
         post_out[:, 2] -= np.min(post_out[:, 2])
 
+        all_3d_points.append(post_out.copy())
+
         input_2D_no = input_2D_no[args.pad]
 
         ## 2D
@@ -230,6 +234,11 @@ def get_pose3D(video_path, output_dir):
         plt.savefig(output_dir_3D + str(('%04d'% i)) + '_3D.png', dpi=200, format='png', bbox_inches = 'tight')
         
     print('Generating 3D pose successful!')
+
+    all_3d_points = np.array(all_3d_points)
+    output_path = os.path.join(output_dir, '3d_coordinates.npz')
+    np.savez_compressed(output_path, points=all_3d_points)
+    print(f'\n3D coordinates saved to {output_path}')
 
     ## all
     image_dir = 'results/' 
